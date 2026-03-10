@@ -1,15 +1,15 @@
-const express = require("express")
-const cors = require("cors")
-const axios = require("axios")
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
 
-const app = express()
+const app = express();
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 app.post("/chat", async (req, res) => {
 
-  const message = req.body.message
+  const message = req.body.message;
 
   try {
 
@@ -20,7 +20,7 @@ app.post("/chat", async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "You are Rivi AI, a sweet supportive companion AI. Always respond warmly."
+            content: "You are Rivi AI, a caring and supportive companion AI. Respond warmly and positively."
           },
           {
             role: "user",
@@ -34,24 +34,24 @@ app.post("/chat", async (req, res) => {
           "Content-Type": "application/json"
         }
       }
-    )
+    );
 
     res.json({
       reply: response.data.choices[0].message.content
-    })
+    });
 
   } catch (error) {
 
-    console.log(error)
+    console.log("AI ERROR:", error.response?.data || error.message);
 
     res.json({
       reply: "AI temporarily unavailable."
-    })
+    });
 
   }
 
-})
+});
 
 app.listen(3000, () => {
-  console.log("Rivi AI server running")
-})
+  console.log("Rivi AI server running");
+});
