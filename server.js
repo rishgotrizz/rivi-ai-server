@@ -1,24 +1,38 @@
 const express = require("express")
 const cors = require("cors")
 const axios = require("axios")
+const fs = require("fs")
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-// simple memory storage
-const conversations = {}
+// MEMORY FILE
+const MEMORY_FILE = "memory.json"
 
-// personality prompt
+// load memory if it exists
+let conversations = {}
+
+if (fs.existsSync(MEMORY_FILE)) {
+  conversations = JSON.parse(fs.readFileSync(MEMORY_FILE))
+}
+
+// save memory function
+function saveMemory() {
+  fs.writeFileSync(MEMORY_FILE, JSON.stringify(conversations, null, 2))
+}
+
+// personality
 const SYSTEM_PROMPT = `
-You are Rivi, a caring AI companion.
-You talk warmly and supportively.
-You remember previous messages and respond like a close friend.
-Keep replies natural and conversational.
+You are Rivi, a caring emotional AI companion.
+You speak warmly and naturally.
+You remember previous conversations.
+You behave like a supportive close friend.
 `
 
 app.post("/chat", async (req, res) => {
+
   const { message, userId = "default" } = req.body
 
   if (!conversations[userId]) {
@@ -58,6 +72,8 @@ app.post("/chat", async (req, res) => {
       content: reply
     })
 
+    saveMemory()
+
     res.json({ reply })
 
   } catch (error) {
@@ -65,10 +81,11 @@ app.post("/chat", async (req, res) => {
     console.log("AI ERROR:", error.response?.data || error)
 
     res.json({
-      reply: "I'm having trouble thinking right now, but I'm here with you."
+      reply: "I'm having trouble thinking right now, but I'm here."
     })
 
   }
+
 })
 
 app.listen(3000, () => {
