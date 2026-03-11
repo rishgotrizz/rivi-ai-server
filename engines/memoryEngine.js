@@ -1,27 +1,57 @@
-const fs = require("fs")
+const { createClient } = require("@supabase/supabase-js")
 
-const FILE="memory.json"
+// connect to Supabase
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+)
 
-let db={}
+// Save memory
+async function saveMemory(text, emotion = "neutral") {
+  try {
 
-if(fs.existsSync(FILE)){
-db = JSON.parse(fs.readFileSync(FILE))
+    const { error } = await supabase
+      .from("memories")
+      .insert([
+        {
+          text: text,
+          emotion: emotion
+        }
+      ])
+
+    if (error) {
+      console.log("Memory save error:", error)
+    }
+
+  } catch (err) {
+    console.log("Memory save error:", err)
+  }
 }
 
-function getMemory(id){
+// Get recent memories
+async function getRecentMemories(limit = 5) {
+  try {
 
-if(!db[id]) db[id]=[]
+    const { data, error } = await supabase
+      .from("memories")
+      .select("text")
+      .order("created_at", { ascending: false })
+      .limit(limit)
 
-return db[id]
+    if (error) {
+      console.log("Memory fetch error:", error)
+      return []
+    }
 
+    return data.map(m => m.text)
+
+  } catch (err) {
+    console.log("Memory fetch error:", err)
+    return []
+  }
 }
 
-function saveMemory(id,data){
-
-db[id]=data
-
-fs.writeFileSync(FILE,JSON.stringify(db,null,2))
-
+module.exports = {
+  saveMemory,
+  getRecentMemories
 }
-
-module.exports = { getMemory, saveMemory }
