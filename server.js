@@ -2,18 +2,34 @@ const express = require("express")
 const cors = require("cors")
 
 const chatRoute = require("./routes/chat")
+const voiceRoute = require("./routes/voice")
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-app.use("/chat", chatRoute)
+/* =========================
+   ROUTES
+========================= */
 
-app.get("/",(req,res)=>{
-res.send("Rivi AI backend running")
+app.use("/chat", chatRoute)
+app.use("/voice", voiceRoute)
+
+/* =========================
+   HEALTH CHECK
+========================= */
+
+app.get("/", (req, res) => {
+  res.send("Rivi AI backend running")
 })
 
-app.listen(3000,()=>{
-console.log("Rivi AI server running")
+/* =========================
+   SERVER START
+========================= */
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
+  console.log("Rivi AI server running on port " + PORT)
 })
