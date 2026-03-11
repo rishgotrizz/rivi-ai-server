@@ -14,8 +14,9 @@ router.post("/", upload.single("audio"), async (req, res) => {
 
     const audioFile = req.file.path
 
-    // Speech to text (Whisper)
-    const transcript = await axios.post(
+    /* SPEECH → TEXT */
+
+    const transcriptRes = await axios.post(
       "https://api.openai.com/v1/audio/transcriptions",
       {
         file: fs.createReadStream(audioFile),
@@ -28,18 +29,38 @@ router.post("/", upload.single("audio"), async (req, res) => {
       }
     )
 
-    const userText = transcript.data.text
+    const userText = transcriptRes.data.text
 
-    // AI reply
+    /* AI RESPONSE */
+
     const reply = await generateReply(
       [{ role: "user", content: userText }],
       "neutral",
       {}
     )
 
+    /* TEXT → SPEECH */
+
+    const voiceRes = await axios.post(
+      "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+      {
+        text: reply
+      },
+      {
+        headers: {
+          "xi-api-key": process.env.ELEVENLABS_API_KEY,
+          "Content-Type": "application/json"
+        },
+        responseType: "arraybuffer"
+      }
+    )
+
+    const audioBase64 = Buffer.from(voiceRes.data).toString("base64")
+
     res.json({
       transcript: userText,
-      reply
+      reply,
+      audio: audioBase64
     })
 
   } catch (err) {
@@ -47,7 +68,7 @@ router.post("/", upload.single("audio"), async (req, res) => {
     console.log("VOICE ERROR:", err)
 
     res.json({
-      reply: "Sorry, I couldn't understand that."
+      reply: "Sorry, I couldn't process that."
     })
 
   }
