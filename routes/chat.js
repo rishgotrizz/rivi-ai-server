@@ -7,6 +7,8 @@ const { detectEmotion } = require("../engines/emotionEngine")
 const { getProfile, updateProfile } = require("../engines/profileEngine")
 const { summarizeConversation } = require("../engines/summarizerEngine")
 const { storeMemory, searchMemory } = require("../engines/vectorMemory")
+const { updateEmotion } = require("../engines/aiEmotionEngine")
+const { updateRelationship } = require("../engines/relationshipEngine")
 
 router.post("/", async (req, res) => {
 
@@ -16,12 +18,30 @@ router.post("/", async (req, res) => {
 
     let history = getMemory(userId)
 
+    /* =========================
+       USER EMOTION
+    ========================= */
+
     const emotion = detectEmotion(message)
 
-    /* store message in vector memory */
+    /* =========================
+       AI EMOTIONAL STATE
+    ========================= */
+
+    const aiState = updateEmotion(emotion)
+
+    /* =========================
+       RELATIONSHIP LEVEL
+    ========================= */
+
+    const relationship = updateRelationship()
+
+    /* =========================
+       VECTOR MEMORY
+    ========================= */
+
     storeMemory(userId, message)
 
-    /* retrieve relevant long-term memories */
     const memories = searchMemory(userId, message)
 
     if (memories.length > 0) {
@@ -33,17 +53,36 @@ router.post("/", async (req, res) => {
 
     }
 
-    /* update relationship profile */
+    /* =========================
+       PROFILE MEMORY
+    ========================= */
+
     updateProfile(userId, message)
 
     const profile = getProfile(userId)
+
+    /* =========================
+       AI STATE CONTEXT
+    ========================= */
+
+    history.unshift({
+      role: "system",
+      content: "Your emotional state is currently: " + aiState.mood + ". Respond accordingly."
+    })
+
+    history.unshift({
+      role: "system",
+      content: "Relationship level with the user is " + relationship.level + " out of 10. Adjust friendliness accordingly."
+    })
 
     history.push({
       role: "user",
       content: message
     })
 
-    /* summarize if conversation gets long */
+    /* =========================
+       SUMMARIZE LONG CHATS
+    ========================= */
 
     if (history.length > 30) {
 
@@ -58,6 +97,10 @@ router.post("/", async (req, res) => {
       ]
 
     }
+
+    /* =========================
+       GENERATE AI RESPONSE
+    ========================= */
 
     const reply = await generateReply(history, emotion, profile)
 
