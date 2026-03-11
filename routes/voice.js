@@ -14,7 +14,9 @@ router.post("/", upload.single("audio"), async (req, res) => {
 
     const audioFile = req.file.path
 
-    /* SPEECH → TEXT */
+    /* =========================
+       SPEECH → TEXT
+    ========================= */
 
     const transcriptRes = await axios.post(
       "https://api.openai.com/v1/audio/transcriptions",
@@ -31,7 +33,9 @@ router.post("/", upload.single("audio"), async (req, res) => {
 
     const userText = transcriptRes.data.text
 
-    /* AI RESPONSE */
+    /* =========================
+       AI RESPONSE
+    ========================= */
 
     const reply = await generateReply(
       [{ role: "user", content: userText }],
@@ -39,7 +43,15 @@ router.post("/", upload.single("audio"), async (req, res) => {
       {}
     )
 
-    /* TEXT → SPEECH */
+    /* =========================
+       HUMAN-LIKE THINKING DELAY
+    ========================= */
+
+    await new Promise(resolve => setTimeout(resolve, 1200))
+
+    /* =========================
+       TEXT → SPEECH
+    ========================= */
 
     const voiceRes = await axios.post(
       "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
@@ -56,6 +68,10 @@ router.post("/", upload.single("audio"), async (req, res) => {
     )
 
     const audioBase64 = Buffer.from(voiceRes.data).toString("base64")
+
+    /* =========================
+       RESPONSE TO APP
+    ========================= */
 
     res.json({
       transcript: userText,
