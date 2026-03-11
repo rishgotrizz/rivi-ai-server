@@ -1,30 +1,26 @@
-const express = require("express")
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
 
-router.get("/", (req, res) => {
+const { getContextAwareProactive } = require("../engines/proactiveEngine");
 
-  const hour = new Date().getHours()
+// TEMP fake memory/emotion (later we connect real memory engine)
+let recentMemory = ["you have an exam tomorrow"];
+let lastEmotion = "nervous";
 
-  let message
+router.get("/", async (req, res) => {
+  try {
+    const message = getContextAwareProactive(recentMemory, lastEmotion);
 
-  if (hour < 12) {
-    message = "Good morning ☀️ Did you sleep well?"
-  } 
-  else if (hour < 17) {
-    message = "Hey, how is your day going?"
-  } 
-  else if (hour < 22) {
-    message = "You've been quiet today. What’s on your mind?"
-  } 
-  else {
-    message = "You should probably be sleeping 😅"
+    res.json({
+      proactive: true,
+      message: message
+    });
+
+  } catch (err) {
+    res.json({
+      proactive: false
+    });
   }
+});
 
-  res.json({
-    proactive: true,
-    message: message
-  })
-
-})
-
-module.exports = router
+module.exports = router;

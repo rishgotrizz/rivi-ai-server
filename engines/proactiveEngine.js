@@ -1,24 +1,31 @@
-function getProactiveMessage(memory, emotion) {
+function getContextAwareProactive(memory = [], emotion = "neutral") {
+  const hour = new Date().getHours();
 
-  const hour = new Date().getHours()
+  // pick last memory if exists
+  const last = memory.length ? memory[memory.length - 1] : null;
 
-  // Morning
-  if (hour < 12) {
-    return "Good morning ☀️ Did you sleep well?"
+  // time-based fallback
+  let timePrompt;
+  if (hour < 12) timePrompt = "Good morning ☀️";
+  else if (hour < 17) timePrompt = "Hey, hope your day is going well.";
+  else if (hour < 22) timePrompt = "How’s your evening going?";
+  else timePrompt = "You’re up late. Everything okay?";
+
+  // emotion-aware
+  if (emotion === "sad" || emotion === "nervous") {
+    return "You seemed a bit stressed earlier. Want to talk about it?";
   }
 
-  // Afternoon
-  if (hour < 17) {
-    return "Hey, how is your day going?"
+  if (emotion === "happy") {
+    return "You sounded pretty happy earlier. What made your day good?";
   }
 
-  // Evening
-  if (hour < 22) {
-    return "You’ve been quiet today. What’s on your mind?"
+  // memory-aware
+  if (last) {
+    return `Earlier you mentioned "${last}". How did that turn out?`;
   }
 
-  // Late night
-  return "You should probably be sleeping 😅"
+  return timePrompt;
 }
 
-module.exports = { getProactiveMessage }
+module.exports = { getContextAwareProactive };
