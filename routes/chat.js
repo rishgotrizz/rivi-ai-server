@@ -5,6 +5,7 @@ const { generateReply } = require("../engines/aiEngine")
 const { getMemory, saveMemory } = require("../engines/memoryEngine")
 const { detectEmotion } = require("../engines/emotionEngine")
 const { getProfile, updateProfile } = require("../engines/profileEngine")
+const { summarizeConversation } = require("../engines/summarizerEngine")
 
 router.post("/", async (req, res) => {
 
@@ -26,9 +27,22 @@ router.post("/", async (req, res) => {
       content: message
     })
 
-    // keep last 20 messages only
-    if (history.length > 20) {
-      history = history.slice(-20)
+    /* =========================
+       MEMORY SUMMARIZATION
+    ========================= */
+
+    if (history.length > 30) {
+
+      const summary = await summarizeConversation(history)
+
+      history = [
+        {
+          role: "system",
+          content: "Conversation summary: " + summary
+        },
+        ...history.slice(-10)
+      ]
+
     }
 
     const reply = await generateReply(history, emotion, profile)
@@ -58,4 +72,4 @@ router.post("/", async (req, res) => {
 
 })
 
-module.exports = route
+module.exports = router
