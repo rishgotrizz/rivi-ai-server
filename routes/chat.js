@@ -6,6 +6,7 @@ const { getMemory, saveMemory } = require("../engines/memoryEngine")
 const { detectEmotion } = require("../engines/emotionEngine")
 const { getProfile, updateProfile } = require("../engines/profileEngine")
 const { summarizeConversation } = require("../engines/summarizerEngine")
+const { storeMemory, searchMemory } = require("../engines/vectorMemory")
 
 router.post("/", async (req, res) => {
 
@@ -17,7 +18,22 @@ router.post("/", async (req, res) => {
 
     const emotion = detectEmotion(message)
 
-    // update relationship memory
+    /* store message in vector memory */
+    storeMemory(userId, message)
+
+    /* retrieve relevant long-term memories */
+    const memories = searchMemory(userId, message)
+
+    if (memories.length > 0) {
+
+      history.unshift({
+        role: "system",
+        content: "Relevant past memories: " + memories.join(", ")
+      })
+
+    }
+
+    /* update relationship profile */
     updateProfile(userId, message)
 
     const profile = getProfile(userId)
@@ -27,9 +43,7 @@ router.post("/", async (req, res) => {
       content: message
     })
 
-    /* =========================
-       MEMORY SUMMARIZATION
-    ========================= */
+    /* summarize if conversation gets long */
 
     if (history.length > 30) {
 
@@ -64,7 +78,7 @@ router.post("/", async (req, res) => {
     console.log("CHAT ERROR:", err)
 
     res.json({
-      reply: "I'm here with you, but I'm having trouble thinking right now.",
+      reply: "I'm here but something went wrong.",
       typing: false
     })
 
