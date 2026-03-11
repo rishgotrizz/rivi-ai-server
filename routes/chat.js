@@ -5,27 +5,50 @@ const { generateReply } = require("../engines/aiEngine")
 const { getMemory, saveMemory } = require("../engines/memoryEngine")
 const { detectEmotion } = require("../engines/emotionEngine")
 
-router.post("/", async (req,res)=>{
+router.post("/", async (req, res) => {
 
-const {message,userId="default"} = req.body
+  const { message, userId = "default" } = req.body
 
-let history = getMemory(userId)
+  try {
 
-const emotion = detectEmotion(message)
+    let history = getMemory(userId)
 
-history.push({role:"user",content:message})
+    const emotion = detectEmotion(message)
 
-if(history.length>20){
-history = history.slice(-20)
-}
+    history.push({
+      role: "user",
+      content: message
+    })
 
-const reply = await generateReply(history,emotion)
+    // keep last 20 messages only
+    if (history.length > 20) {
+      history = history.slice(-20)
+    }
 
-history.push({role:"assistant",content:reply})
+    const reply = await generateReply(history, emotion)
 
-saveMemory(userId,history)
+    history.push({
+      role: "assistant",
+      content: reply
+    })
 
-res.json({reply})
+    saveMemory(userId, history)
+
+    res.json({
+      reply,
+      typing: true
+    })
+
+  } catch (err) {
+
+    console.log("CHAT ERROR:", err)
+
+    res.json({
+      reply: "I'm here with you, but I'm having trouble thinking right now.",
+      typing: false
+    })
+
+  }
 
 })
 
