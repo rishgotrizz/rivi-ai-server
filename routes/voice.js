@@ -40,11 +40,11 @@ router.post("/", upload.single("audio"), async (req, res) => {
     const reply = await generateReply(
       [{ role: "user", content: userText }],
       "neutral",
-      {}
+      { voiceMode: true }
     )
 
     /* =========================
-       HUMAN-LIKE THINKING DELAY
+       HUMAN THINKING DELAY
     ========================= */
 
     await new Promise(resolve => setTimeout(resolve, 1200))
@@ -68,10 +68,6 @@ router.post("/", upload.single("audio"), async (req, res) => {
     )
 
     const audioBase64 = Buffer.from(voiceRes.data).toString("base64")
-
-    /* =========================
-       RESPONSE TO APP
-    ========================= */
 
     res.json({
       transcript: userText,
