@@ -4,6 +4,7 @@ const router = express.Router()
 const { generateReply } = require("../engines/aiEngine")
 const { getMemory, saveMemory } = require("../engines/memoryEngine")
 const { detectEmotion } = require("../engines/emotionEngine")
+const { getProfile, updateProfile } = require("../engines/profileEngine")
 
 router.post("/", async (req, res) => {
 
@@ -15,6 +16,11 @@ router.post("/", async (req, res) => {
 
     const emotion = detectEmotion(message)
 
+    // update relationship memory
+    updateProfile(userId, message)
+
+    const profile = getProfile(userId)
+
     history.push({
       role: "user",
       content: message
@@ -25,7 +31,7 @@ router.post("/", async (req, res) => {
       history = history.slice(-20)
     }
 
-    const reply = await generateReply(history, emotion)
+    const reply = await generateReply(history, emotion, profile)
 
     history.push({
       role: "assistant",
@@ -52,4 +58,4 @@ router.post("/", async (req, res) => {
 
 })
 
-module.exports = router
+module.exports = route
